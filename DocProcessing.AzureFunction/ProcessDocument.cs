@@ -39,6 +39,8 @@ namespace DocProcessing.AzureFunction
                                     log);
 
                 log.Info($"Processed blob Result: {JsonConvert.SerializeObject(result)}");
+
+                // REMOVED Entity Framework code for saving results of processing to SQL
             }
             catch (Exception ex)
             {
