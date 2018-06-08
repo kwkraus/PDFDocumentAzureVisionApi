@@ -13,7 +13,7 @@ namespace DocProcessing.AzureFunction.Helpers
 
         public StorageHelper()
         {
-            var connStr = ConfigurationManager.AppSettings["servconstorage"].ToString();
+            var connStr = ConfigurationManager.AppSettings["storageresource"].ToString();
             _storageAccount = CloudStorageAccount.Parse(connStr);
         }
 

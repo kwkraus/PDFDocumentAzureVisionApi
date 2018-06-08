@@ -104,7 +104,7 @@ namespace DocProcessing.AzureFunction
 
                                             // Azure Vision service has a cap on images processed per second
                                             // let's slow it down
-                                            await Task.Delay(500);
+                                            await Task.Delay(100);
                                         }
                                         catch (ArgumentException aex)
                                         {
