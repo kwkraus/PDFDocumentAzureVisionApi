@@ -42,7 +42,5 @@ namespace DocProcessing.AzureFunction.Models
                 return new Guid(Path.GetFileNameWithoutExtension(BlobName));
             }
         }
-
-        public string EntityType { get; set; }
     }
 }
