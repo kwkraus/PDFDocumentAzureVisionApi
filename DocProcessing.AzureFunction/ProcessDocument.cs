@@ -19,7 +19,7 @@ namespace DocProcessing.AzureFunction
         [FunctionName("ProcessDocument")]
         public static async Task Run(
             [QueueTrigger("docprocessingrequests", Connection = "storageresource")]BlobInfo myQueueItem,
-            [Blob("documentoriginals/{BlobName}", FileAccess.ReadWrite)] CloudBlockBlob blob,
+            [Blob("originaldocuments/{BlobName}", FileAccess.ReadWrite)] CloudBlockBlob blob,
             TraceWriter log)
         {
             log.Info($"C# Queue trigger function processed: {myQueueItem}");
@@ -78,19 +78,14 @@ namespace DocProcessing.AzureFunction
                         {
                             case ".pdf":
 
-                                var bytes = stream.ToArray();
-
                                 // if there is any text within document add to builder
-                                DocumentProcessor.GetTextFromPdf(bytes, out builder);
+                                DocumentProcessor.GetTextFromPdf(stream, out builder);
 
                                 // extract all images within document that are greater than 50x50 pixels
-                                List<Stream> images = DocumentProcessor.ExtractImagesFromPDF(bytes, log);
+                                List<Stream> images = DocumentProcessor.ExtractImagesFromPDF(stream, log);
 
-                                // if we have images, we assume it needs OCR
                                 if (images.Count > 0)
                                 {
-                                    log.Info($"Document has {images.Count} images extracted");
-
                                     int imageCounter = 0;
 
                                     foreach (Stream img in images)
@@ -104,7 +99,7 @@ namespace DocProcessing.AzureFunction
 
                                             // Azure Vision service has a cap on images processed per second
                                             // let's slow it down
-                                            await Task.Delay(100);
+                                            await Task.Delay(1000);
                                         }
                                         catch (ArgumentException aex)
                                         {
@@ -115,6 +110,8 @@ namespace DocProcessing.AzureFunction
                                         catch (Exception ex)
                                         {
                                             log.Warning($"Failed to OCR scan pfd image #{imageCounter} of {images.Count} for {blob.Name}. Error:{ex.Message}");
+
+                                            // Vision API can throw ClientException, grab inner exception for details
                                             if (ex.InnerException != null && ex.InnerException is ClientException)
                                             {
                                                 log.Warning($"InnerException Details: Message={((ClientException)ex.InnerException).Error.Message}");

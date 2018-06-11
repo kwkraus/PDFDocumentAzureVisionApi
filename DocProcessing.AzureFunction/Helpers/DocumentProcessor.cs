@@ -40,8 +40,17 @@ namespace DocProcessing.AzureFunction.Helpers
 
             for (int i = 1; i <= reader.NumberOfPages; i++)
                 builder.Append(PdfTextExtractor.GetTextFromPage(reader, i, new SimpleTextExtractionStrategy()));
-
         }
+
+        public static void GetTextFromPdf(Stream pdfIn, out StringBuilder builder)
+        {
+            builder = new StringBuilder();
+            var reader = new PdfReader(pdfIn);
+
+            for (int i = 1; i <= reader.NumberOfPages; i++)
+                builder.Append(PdfTextExtractor.GetTextFromPage(reader, i, new SimpleTextExtractionStrategy()));
+        }
+
 
         public static List<Stream> ExtractImagesFromPDF(byte[] sourcePdf, TraceWriter log)
         {
@@ -83,6 +92,48 @@ namespace DocProcessing.AzureFunction.Helpers
 
             return imgList;
         }
+
+        public static List<Stream> ExtractImagesFromPDF(Stream sourcePdf, TraceWriter log)
+        {
+            List<Stream> imgList = new List<Stream>();
+            PdfReader reader = new PdfReader(sourcePdf);
+            PRStream pst;
+            PdfImageObject pio;
+            PdfObject po;
+
+            int n = reader.XrefSize;
+            try
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    po = reader.GetPdfObject(i);
+                    if (po == null || !po.IsStream())
+                        continue;
+
+                    pst = (PRStream)po;
+                    PdfObject type = pst.Get(PdfName.SUBTYPE);
+
+                    if (type != null && type.ToString().Equals(PdfName.IMAGE.ToString()))
+                    {
+                        pio = new PdfImageObject(pst);
+
+                        var image = pio.GetDrawingImage();
+
+                        // only add images larger than 50x50 for OCR processing
+                        if (image.Height >= 50 && image.Width >= 50)
+                        {
+                            byte[] imgdata = pio.GetImageAsBytes();
+                            MemoryStream memStream = new MemoryStream(imgdata);
+                            imgList.Add(memStream);
+                        }
+                    }
+                }
+            }
+            catch (Exception e) { log.Error(e.Message); }
+
+            return imgList;
+        }
+
 
         private static PdfObject FindImageInPDFDictionary(PdfDictionary pg)
         {
