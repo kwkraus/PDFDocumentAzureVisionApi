@@ -33,7 +33,7 @@ namespace DocProcessing.AzureFunction.Helpers
             return stream;
         }
 
-        public static void GetTextFromPdf(Stream pdfIn, out StringBuilder builder)
+        public static void GetTextFromPdf(byte[] pdfIn, out StringBuilder builder)
         {
             builder = new StringBuilder();
             var reader = new PdfReader(pdfIn);
@@ -42,7 +42,7 @@ namespace DocProcessing.AzureFunction.Helpers
                 builder.Append(PdfTextExtractor.GetTextFromPage(reader, i, new SimpleTextExtractionStrategy()));
         }
 
-        public static List<Stream> ExtractImagesFromPDF(Stream sourcePdf, TraceWriter log)
+        public static List<Stream> ExtractImagesFromPDF(byte[] sourcePdf, TraceWriter log)
         {
             List<Stream> imgList = new List<Stream>();
             PdfReader reader = new PdfReader(sourcePdf);

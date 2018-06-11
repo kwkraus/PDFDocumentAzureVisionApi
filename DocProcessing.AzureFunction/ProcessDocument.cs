@@ -78,11 +78,13 @@ namespace DocProcessing.AzureFunction
                         {
                             case ".pdf":
 
+                                var bytes = stream.ToArray();
+
                                 // if there is any text within document add to builder
-                                DocumentProcessor.GetTextFromPdf(stream, out builder);
+                                DocumentProcessor.GetTextFromPdf(bytes, out builder);
 
                                 // extract all images within document that are greater than 50x50 pixels
-                                List<Stream> images = DocumentProcessor.ExtractImagesFromPDF(stream, log);
+                                List<Stream> images = DocumentProcessor.ExtractImagesFromPDF(bytes, log);
 
                                 if (images.Count > 0)
                                 {
